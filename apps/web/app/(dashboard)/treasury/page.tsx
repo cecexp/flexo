@@ -34,9 +34,17 @@ export default function TreasuryPage() {
   async function handleConfirm() {
     try {
       setStep('converting')
-      await new Promise(r => setTimeout(r, 1000))
-      const o = await createBuyOrder(idleMXN)
-      setOrder(o)
+      const res = await fetch('/api/bitso/convert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount_mxn: idleMXN,
+          company_id: '00000000-0000-0000-0000-000000000001', // empresa demo del schema
+        }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error)
+      setOrder(data.order)
       setStep('depositing')
       await new Promise(r => setTimeout(r, 2000))
       setStep('done')

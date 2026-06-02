@@ -7,9 +7,10 @@ import ThemeToggle from './theme-toggle'
 import { useState } from 'react'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Cuentas',   path: '/accounts'  },
-  { label: 'Tesorería', path: '/treasury'  },
+  { label: 'Dashboard',     path: '/dashboard'    },
+  { label: 'Cuentas',       path: '/accounts'     },
+  { label: 'Tesorería',     path: '/treasury'     },
+  { label: 'Transacciones', path: '/transactions' },
 ]
 
 export default function Nav({ onSync }: { onSync?: () => void }) {
