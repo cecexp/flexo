@@ -103,8 +103,8 @@ export default function TreasuryPage() {
                 </div>
                 <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                   {[
-                    { label: 'Conversión MXN → USDC', done: step === 'depositing' || step === 'done' },
-                    { label: 'Depósito en protocolo',  done: step === 'done' },
+                 { label: 'Conversión MXN → USDC', done: (step as string) === 'depositing' || (step as string) === 'done' },
+                 { label: 'Depósito en protocolo',  done: (step as string) === 'done' },
                   ].map(({ label, done }) => (
                     <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                       {done
