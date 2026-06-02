@@ -2,23 +2,20 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Zap, TrendingUp, Building2, ArrowUpRight, ArrowDownRight, RefreshCw, LogOut, Shield, ChevronRight } from 'lucide-react'
+import { TrendingUp, Building2, ArrowUpRight, ArrowDownRight, Shield, ChevronRight } from 'lucide-react'
 import { getMockSession, clearMockSession } from '@/lib/mock/privy'
 import { MOCK_WALLET, MOCK_BANK_ACCOUNTS, MOCK_TRANSACTIONS } from '@/lib/mock/data'
-import ThemeToggle from '@/components/ui/theme-toggle'
+import Nav from '@/components/ui/nav'
 
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
-  const [syncing, setSyncing] = useState(false)
 
   useEffect(() => {
     const session = getMockSession()
     if (!session) { router.push('/login'); return }
     setUser(session)
   }, [router])
-
-  async function handleSync() { setSyncing(true); await new Promise(r => setTimeout(r, 1200)); setSyncing(false) }
 
   if (!user) return null
 
@@ -27,192 +24,232 @@ export default function DashboardPage() {
   const exchangeRate = 17.01
   const totalMXNEquiv = totalMXN + (MOCK_WALLET.usdc_total * exchangeRate)
 
+  const kpis = [
+    { label: 'Patrimonio total',       value: formatMXN(totalMXNEquiv),                        sub: 'Bancario + rendimientos',    trend: '+2.3%',  trendUp: true  },
+    { label: 'Liquidez bancaria',      value: formatMXN(totalMXN),                             sub: `${MOCK_BANK_ACCOUNTS.length} cuentas activas` },
+    { label: 'Generando rendimiento',  value: `$${MOCK_WALLET.usdc_total.toFixed(0)} USD`,      sub: `${MOCK_WALLET.current_apy}% APY`,            trend: '+8.2%', trendUp: true  },
+    { label: 'Rendimiento total',      value: `$${MOCK_WALLET.yield_earned_total.toFixed(2)} USD`, sub: 'Acumulado',                trend: `+$${(MOCK_WALLET.yield_earned_total / 30).toFixed(2)}/día`, trendUp: true },
+  ]
+
   return (
-    <div className="min-h-screen bg-gray-950 dark:bg-gray-950 light:bg-gray-50">
-      <header className="border-b border-gray-800 dark:border-gray-800 bg-gray-950 dark:bg-gray-950 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-emerald-500 rounded-md flex items-center justify-center">
-                <Zap className="w-3 h-3 text-white" />
-              </div>
-              <span className="text-white font-semibold text-sm">Fluxo</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-1">
-              {[
-                { label: 'Dashboard', path: '/dashboard', active: true },
-                { label: 'Cuentas', path: '/accounts' },
-                { label: 'Tesorería', path: '/treasury' },
-              ].map(({ label, path, active }) => (
-                <button key={path} onClick={() => router.push(path)}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${active
-                    ? 'bg-gray-800 text-white font-medium'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
-                  {label}
-                </button>
-              ))}
-            </nav>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <button onClick={handleSync} className="flex items-center gap-1.5 text-gray-400 hover:text-white text-sm transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-800">
-              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Sync</span>
-            </button>
-            <div className="w-px h-4 bg-gray-800" />
-            <button onClick={() => { clearMockSession(); router.push('/login') }} className="text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-gray-800">
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      </header>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      <Nav />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <p className="text-gray-400 text-sm mb-0.5">{user.company}</p>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Buenos días, {user.name.split(' ')[0]} 👋</h1>
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1rem' }}>
+        {/* Greeting */}
+        <div style={{ marginBottom: '2rem' }} className="animate-fade-up">
+          <p style={{ fontSize: 13, color: 'var(--txt3)', marginBottom: '0.3rem' }}>{user.company}</p>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, color: 'var(--txt)', letterSpacing: '-0.025em' }}>
+            Buenos días, {user.name.split(' ')[0]} 👋
+          </h1>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          {[
-            { label: 'Patrimonio total', value: formatMXN(totalMXNEquiv), sub: 'Bancario + rendimientos', trend: '+2.3%' },
-            { label: 'Liquidez bancaria', value: formatMXN(totalMXN), sub: `${MOCK_BANK_ACCOUNTS.length} cuentas activas` },
-            { label: 'Generando rendimiento', value: `$${MOCK_WALLET.usdc_total.toFixed(0)} USD`, sub: `${MOCK_WALLET.current_apy}% APY`, trend: '+8.2%' },
-            { label: 'Rendimiento total', value: `$${MOCK_WALLET.yield_earned_total.toFixed(2)} USD`, sub: 'Acumulado', trend: `+$${(MOCK_WALLET.yield_earned_total / 30).toFixed(2)}/día` },
-          ].map(({ label, value, sub, trend }) => (
-            <div key={label} className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
-              <p className="text-gray-400 text-xs mb-3">{label}</p>
-              <p className="text-white text-lg font-bold tracking-tight mb-0.5">{value}</p>
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-gray-500 text-xs truncate">{sub}</p>
-                {trend && <span className="text-emerald-400 text-xs font-medium flex-shrink-0">{trend}</span>}
+        {/* KPI cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }} className="kpi-grid animate-fade-up">
+          {kpis.map(({ label, value, sub, trend, trendUp }) => (
+            <div key={label} className="card" style={{ padding: '1.25rem' }}>
+              <p style={{ fontSize: 12, color: 'var(--txt3)', marginBottom: '0.75rem', fontWeight: 500 }}>{label}</p>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.02em', marginBottom: '0.35rem' }}>{value}</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <p style={{ fontSize: 12, color: 'var(--txt2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</p>
+                {trend && (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--neon)', flexShrink: 0, background: 'var(--neon-muted)', padding: '2px 6px', borderRadius: 6 }}>
+                    {trend}
+                  </span>
+                )}
               </div>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 flex flex-col gap-4">
+        {/* Main grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }} className="main-grid">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+            {/* Idle alert */}
             {totalIdleMXN > 0 && (
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center justify-between">
+              <div style={{
+                background: 'var(--amber-bg)', border: '1px solid var(--amber-border)',
+                borderRadius: 14, padding: '1rem 1.25rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem',
+              }}>
                 <div>
-                  <p className="text-amber-400 text-sm font-medium">{formatMXN(totalIdleMXN)} sin generar rendimiento</p>
-                  <p className="text-gray-500 text-xs mt-0.5">~${(totalIdleMXN / exchangeRate).toFixed(0)} USD por convertir</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--amber)', marginBottom: '0.2rem' }}>
+                    {formatMXN(totalIdleMXN)} sin generar rendimiento
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--txt2)' }}>
+                    ~${(totalIdleMXN / exchangeRate).toFixed(0)} USD por convertir
+                  </p>
                 </div>
-                <button onClick={() => router.push('/treasury')} className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors flex-shrink-0">
+                <button onClick={() => router.push('/treasury')} className="btn-neon"
+                  style={{ padding: '0.5rem 1rem', borderRadius: 10, border: 'none', fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
                   Convertir ahora
                 </button>
               </div>
             )}
+{/* Bank accounts */}
+<div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+  {/* Encabezado de la sección fuera de las tarjetas */}
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.25rem 0.5rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <Building2 size={14} color="var(--txt3)" />
+      <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--txt)' }}>Cuentas bancarias</span>
+    </div>
+    <button onClick={() => router.push('/accounts')}
+      style={{ fontSize: 12, color: 'var(--txt3)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+      Ver todas <ChevronRight size={12} />
+    </button>
+  </div>
 
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-800">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-white font-medium text-sm">Cuentas bancarias</span>
-                </div>
-                <button onClick={() => router.push('/accounts')} className="text-gray-400 hover:text-white text-xs flex items-center gap-1 transition-colors">
-                  Ver todas <ChevronRight className="w-3 h-3" />
+  {/* Tarjetas individuales con bordes */}
+  {MOCK_BANK_ACCOUNTS.map((acc) => (
+    <div 
+      key={acc.id} 
+      className="card" /* Reutiliza los estilos globales de tu archivo css */
+      style={{
+        padding: '1.25rem',
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        border: '1px solid var(--border)', /* Token sutil de borde */
+        borderRadius: '12px', /* Esquinas redondeadas modernas */
+        background: 'var(--bg2)', /* Fondo para hacer contraste con el fondo principal */
+        transition: 'all 0.2s ease',
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--border2)'}
+      onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+    >
+      {/* Lado izquierdo: Información del banco */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--neon)' }}>{acc.institution.slice(0, 2)}</span>
+        </div>
+        <div>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--txt)' }}>{acc.institution}</p>
+          <p style={{ fontSize: 12, color: 'var(--txt3)' }}>{acc.account_name}</p>
+        </div>
+      </div>
+
+      {/* Lado derecho: Saldos */}
+      <div style={{ textAlign: 'right' }}>
+        <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt)' }}>{formatMXN(acc.available_balance)}</p>
+        <p style={{ fontSize: 12, color: acc.idle_liquidity > 0 ? 'var(--amber)' : 'var(--txt3)', fontWeight: acc.idle_liquidity > 0 ? 500 : 400 }}>
+          {acc.idle_liquidity > 0 ? `${formatMXN(acc.idle_liquidity)} ocioso` : 'Sin ocioso'}
+        </p>
+      </div>
+    </div>
+  ))}
+</div>
+
+            {/* Recent activity */}
+            <div className="card" style={{ overflow: 'hidden' }}>
+              <div style={{ padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--txt)' }}>Actividad reciente</span>
+                <button style={{ fontSize: 12, color: 'var(--txt3)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                  Ver todo <ChevronRight size={12} />
                 </button>
               </div>
-              {MOCK_BANK_ACCOUNTS.map((acc, i) => (
-                <div key={acc.id} className={`px-5 py-3.5 flex items-center justify-between ${i < MOCK_BANK_ACCOUNTS.length - 1 ? 'border-b border-gray-800' : ''}`}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gray-800 rounded-xl flex items-center justify-center">
-                      <span className="text-xs font-bold text-gray-300">{acc.institution.slice(0, 2)}</span>
+              {MOCK_TRANSACTIONS.map((tx, i) => {
+                const isYield = tx.type === 'yield_earned'
+                const isDeposit = tx.type === 'deposit'
+                return (
+                  <div key={tx.id} style={{
+                    padding: '0.75rem 1.25rem',
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    borderBottom: i < MOCK_TRANSACTIONS.length - 1 ? '1px solid var(--border)' : 'none',
+                  }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+                      background: isYield ? 'var(--neon-muted)' : isDeposit ? 'rgba(77,166,255,0.08)' : 'var(--bg3)',
+                      border: `1px solid ${isYield ? 'var(--neon-border)' : 'var(--border)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {isYield ? <TrendingUp size={14} color="var(--neon)" /> :
+                       isDeposit ? <ArrowDownRight size={14} color="var(--blue)" /> :
+                       <ArrowUpRight size={14} color="var(--txt3)" />}
                     </div>
-                    <div>
-                      <p className="text-white text-sm font-medium">{acc.institution}</p>
-                      <p className="text-gray-500 text-xs">{acc.account_name}</p>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <p style={{ fontSize: 13, color: 'var(--txt)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.description}</p>
+                      <p style={{ fontSize: 11, color: 'var(--txt3)' }}>{formatTime(tx.created_at)}</p>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)' }}>
+                        {tx.currency === 'MXN' ? formatMXN(tx.amount) : `$${tx.amount.toFixed(2)} ${tx.currency}`}
+                      </p>
+                      <p style={{ fontSize: 11, color: 'var(--txt3)' }}>{formatStatus(tx.status)}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-white text-sm font-semibold">{formatMXN(acc.available_balance)}</p>
-                    <p className={`text-xs ${acc.idle_liquidity > 0 ? 'text-amber-400' : 'text-gray-500'}`}>
-                      {acc.idle_liquidity > 0 ? `${formatMXN(acc.idle_liquidity)} ocioso` : 'Sin ocioso'}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-800">
-                <span className="text-white font-medium text-sm">Actividad reciente</span>
-                <button className="text-gray-400 hover:text-white text-xs flex items-center gap-1 transition-colors">
-                  Ver todo <ChevronRight className="w-3 h-3" />
-                </button>
-              </div>
-              {MOCK_TRANSACTIONS.map((tx, i) => (
-                <div key={tx.id} className={`px-5 py-3 flex items-center gap-3 ${i < MOCK_TRANSACTIONS.length - 1 ? 'border-b border-gray-800' : ''}`}>
-                  <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    tx.type === 'yield_earned' ? 'bg-emerald-500/10' :
-                    tx.type === 'deposit' ? 'bg-blue-500/10' : 'bg-gray-800'}`}>
-                    {tx.type === 'yield_earned' ? <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> :
-                     tx.type === 'deposit' ? <ArrowDownRight className="w-3.5 h-3.5 text-blue-400" /> :
-                     <ArrowUpRight className="w-3.5 h-3.5 text-gray-400" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm truncate">{tx.description}</p>
-                    <p className="text-gray-500 text-xs">{formatTime(tx.created_at)}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-white text-sm font-medium">
-                      {tx.currency === 'MXN' ? formatMXN(tx.amount) : `$${tx.amount.toFixed(2)} ${tx.currency}`}
-                    </p>
-                    <p className="text-gray-500 text-xs">{formatStatus(tx.status)}</                </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="w-3.5 h-3.5 text-gray-400" />
-                <span className="text-white font-medium text-sm">Rendimiento activo</span>
+          {/* Sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} className="sidebar">
+            {/* Yield card */}
+            <div className="card" style={{ padding: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <TrendingUp size={14} color="var(--txt3)" />
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--txt)' }}>Rendimiento activo</span>
               </div>
-              <div className="text-center py-3 border border-gray-800 rounded-xl mb-4">
-                <p className="text-3xl font-bold text-emerald-400">{MOCK_WALLET.current_apy}%</p>
-                <p className="text-gray-400 text-xs mt-0.5">APY estimado anual</p>
+              <div style={{
+                textAlign: 'center', padding: '1rem',
+                background: 'var(--neon-muted)', border: '1px solid var(--neon-border)',
+                borderRadius: 12, marginBottom: '1rem',
+              }} className="animate-pulse-neon">
+                <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 36, color: 'var(--neon)', letterSpacing: '-0.02em' }}>{MOCK_WALLET.current_apy}%</p>
+                <p style={{ fontSize: 12, color: 'var(--txt3)', marginTop: '0.2rem' }}>APY estimado anual</p>
               </div>
-              <div className="flex flex-col gap-2.5">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                 {[
                   { label: 'En rendimiento', value: `$${MOCK_WALLET.usdc_in_protocol.toFixed(2)} USD` },
-                  { label: 'Disponible', value: `$${MOCK_WALLET.usdc_balance.toFixed(2)} USD` },
+                  { label: 'Disponible',     value: `$${MOCK_WALLET.usdc_balance.toFixed(2)} USD` },
                   { label: 'Total generado', value: `+$${MOCK_WALLET.yield_earned_total.toFixed(2)} USD`, green: true },
                 ].map(({ label, value, green }) => (
-                  <div key={label} className="flex justify-between">
-                    <span className="text-gray-400 text-xs">{label}</span>
-                    <span className={`text-xs font-medium ${green ? 'text-emerald-400' : 'text-white'}`}>{value}</span>
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 12, color: 'var(--txt3)' }}>{label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: green ? 'var(--neon)' : 'var(--txt)' }}>{value}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Shield className="w-3.5 h-3.5 text-gray-400" />
-                <span className="text-white font-medium text-sm">Colchón de seguridad</span>
+            {/* Safety buffer */}
+            <div className="card" style={{ padding: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <Shield size={14} color="var(--txt3)" />
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--txt)' }}>Colchón de seguridad</span>
               </div>
               {MOCK_BANK_ACCOUNTS.map(acc => (
-                <div key={acc.id} className="mb-3 last:mb-0">
-                  <div className="flex justify-between mb-1.5">
-                    <span className="text-gray-400 text-xs">{acc.institution}</span>
-                    <span className="text-white text-xs font-medium">{formatMXN(acc.safety_buffer)}</span>
+                <div key={acc.id} style={{ marginBottom: '0.875rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                    <span style={{ fontSize: 12, color: 'var(--txt3)' }}>{acc.institution}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--txt)' }}>{formatMXN(acc.safety_buffer)}</span>
                   </div>
-                  <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min((acc.safety_buffer / acc.current_balance) * 100, 100)}%` }} />
+                  <div style={{ height: 4, background: 'var(--bg3)', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', background: 'var(--blue)', borderRadius: 99, width: `${Math.min((acc.safety_buffer / acc.current_balance) * 100, 100)}%`, transition: 'width 0.6s ease' }} />
                   </div>
                 </div>
               ))}
-              <button onClick={() => router.push('/treasury')} className="w-full mt-4 h-9 border border-gray-700 hover:border-gray-600 text-gray-300 hover:text-white rounded-xl text-xs font-medium transition-all">
+              <button onClick={() => router.push('/treasury')} style={{
+                width: '100%', height: 38, marginTop: '0.5rem',
+                background: 'var(--bg3)', border: '1px solid var(--border)',
+                borderRadius: 10, fontSize: 13, fontWeight: 500, color: 'var(--txt2)',
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}>
                 Configurar colchón
               </button>
             </div>
           </div>
         </div>
       </main>
+
+      <style>{`
+        @media (min-width: 1024px) {
+          .kpi-grid { grid-template-columns: repeat(4, 1fr) !important; }
+          .main-grid { grid-template-columns: 1fr 300px !important; }
+        }
+      `}</style>
     </div>
   )
 }

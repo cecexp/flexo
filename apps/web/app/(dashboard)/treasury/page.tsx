@@ -25,7 +25,7 @@ export default function TreasuryPage() {
     getTicker().then(setTicker)
   }, [router])
 
-  const totalMXN = MOCK_BANK_ACCOUNTS.reduce((a, b) => a +available_balance, 0)
+  const totalMXN = MOCK_BANK_ACCOUNTS.reduce((a, b) => a + b.available_balance, 0)
   const idleMXN = Math.max(totalMXN - buffer, 0)
   const idleUSDC = ticker ? idleMXN / ticker.last : 0
   const estimatedYearlyUSD = idleUSDC * (MOCK_WALLET.current_apy / 100)
@@ -49,58 +49,69 @@ export default function TreasuryPage() {
   function reset() { setStep('idle'); setOrder(null); setError('') }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Nav />
 
+      {/* Modal */}
       {step !== 'idle' && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 w-full max-w-md">
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 50, padding: '1rem',
+          backdropFilter: 'blur(4px)',
+          animation: 'fade-in 0.2s ease',
+        }}>
+          <div className="card animate-fade-up" style={{ padding: '1.75rem', width: '100%', maxWidth: 420 }}>
+
             {step === 'confirming' && (
               <>
-                <h3 className="text-gray-900 dark:text-white font-bold text-lg mb-2">Confirmar conversión</h3>
-                <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Estás a punto de convertir tu liquidez ociosa a USDC para generar rendimiento.</p>
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-6 flex flex-col gap-3">
+                <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: 'var(--txt)', letterSpacing: '-0.02em', marginBottom: '0.4rem' }}>Confirmar conversión</h3>
+                <p style={{ fontSize: 14, color: 'var(--txt2)', marginBottom: '1.5rem', lineHeight: 1.6 }}>Estás a punto de convertir tu liquidez ociosa a USDC para generar rendimiento.</p>
+                <div style={{ background: 'var(--bg3)', borderRadius: 12, padding: '1rem', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {[
-                    { label: 'Monto a convertir', value: formatMXN(idleMXN), color: 'text-gray-900 dark:text-white' },
-                    { label: 'Recibirás aprox.', value: `$${idleUSDC.toFixed(2)} USDC`, color: 'text-emerald-600 dark:text-emerald-400' },
-                    { label: 'Tipo de cambio', value: `$${ticker?.last.toFixed(4)} MXN/USDC`, color: 'text-gray-900 dark:text-white' },
-                    { label: 'Comisión estimada', value: formatMXN(idleMXN * 0.005), color: 'text-gray-900 dark:text-white' },
-                    { label: 'APY estimado', value: `${MOCK_WALLET.current_apy}%`, color: 'text-emerald-600 dark:text-emerald-400' },
+                    { label: 'Monto a convertir',  value: formatMXN(idleMXN),               color: 'var(--txt)' },
+                    { label: 'Recibirás aprox.',    value: `$${idleUSDC.toFixed(2)} USDC`,   color: 'var(--neon)' },
+                    { label: 'Tipo de cambio',      value: `$${ticker?.last.toFixed(4)} MXN/USDC`, color: 'var(--txt)' },
+                    { label: 'Comisión estimada',   value: formatMXN(idleMXN * 0.005),        color: 'var(--txt)' },
+                    { label: 'APY estimado',        value: `${MOCK_WALLET.current_apy}%`,     color: 'var(--neon)' },
                   ].map(({ label, value, color }) => (
-                    <div key={label} className="flex justify-between">
-                      <span className="text-gray-400 dark:text-gray-400 text-sm">{label}</span>
-                      <span className={`text-sm font-medium ${color}`}>{value}</span>
+                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 13, color: 'var(--txt3)' }}>{label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color }}>{value}</span>
                     </div>
                   ))}
                 </div>
-                <div className="flex gap-3">
-                  <button onClick={reset} className="flex-1 h-11 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-sm hover:border-gray-900 dark:hover:border-gray-600 transition-colors">Cancelar</button>
-                  <button onClick={handleConfirm} className="flex-1 h-11 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-sm font-semibold transition-colors">Confirmar</button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button onClick={reset} style={{ flex: 1, height: 44, background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 14, fontWeight: 500, color: 'var(--txt2)', cursor: 'pointer' }}>Cancelar</button>
+                  <button onClick={handleConfirm} className="btn-neon" style={{ flex: 1, height: 44, border: 'none', borderRadius: 12, fontSize: 14, cursor: 'pointer' }}>Confirmar</button>
                 </div>
               </>
             )}
 
             {(step === 'converting' || step === 'depositing') && (
-              <div className="flex flex-col items-center gap-4 py-6">
-                <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center">
-                  <Loader2 className="w-7 h-7 text-emerald-500 animate-spin" />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem', padding: '0.5rem 0' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--neon-muted)', border: '1px solid var(--neon-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Loader2 size={26} color="var(--neon)" className="animate-spin" />
                 </div>
-                <div className="text-center">
-                  <p className="text-gray-900 dark:text-white font-semibold mb-1">
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--txt)', marginBottom: '0.3rem' }}>
                     {step === 'converting' ? 'Convirtiendo MXN a USDC...' : 'Depositando en protocolo...'}
                   </p>
-                  <p className="text-gray-400 dark:text-gray-400 text-sm">
+                  <p style={{ fontSize: 13, color: 'var(--txt3)' }}>
                     {step === 'converting' ? 'Ejecutando orden en Bitso Business' : 'Depositando USDC de forma segura'}
                   </p>
                 </div>
-                <div className="w-full flex flex-col gap-2">
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                   {[
                     { label: 'Conversión MXN → USDC', done: step === 'depositing' || step === 'done' },
-                    { label: 'Depósito en protocolo', done: step === 'done' },
+                    { label: 'Depósito en protocolo',  done: step === 'done' },
                   ].map(({ label, done }) => (
-                    <div key={label} className="flex items-center gap-2">
-                      {done ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <div className="w-4 h-4 border-2 border-gray-200 dark:border-gray-700 rounded-full" />}
-                      <span className={`text-sm ${done ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>{label}</span>
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      {done
+                        ? <CheckCircle2 size={16} color="var(--neon)" />
+                        : <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--border)' }} />
+                      }
+                      <span style={{ fontSize: 13, color: done ? 'var(--txt)' : 'var(--txt3)' }}>{label}</span>
                     </div>
                   ))}
                 </div>
@@ -108,126 +119,137 @@ export default function TreasuryPage() {
             )}
 
             {step === 'done' && (
-              <div className="flex flex-col items-center gap-4 py-4">
-                <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center">
-                  <CheckCircle2 className="w-7 h-7 text-emerald-500" />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '0.5rem 0' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--neon-muted)', border: '1px solid var(--neon-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CheckCircle2 size={26} color="var(--neon)" />
                 </div>
-                <div className="text-center">
-                  <p className="text-gray-900 dark:text-white font-bold text-lg mb-1">¡Listo!</p>
-                  <p className="text-gray-400 dark:text-gray-400 text-sm">Tu liquidez ya está generando rendimiento.</p>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 800, color: 'var(--txt)', marginBottom: '0.3rem' }}>¡Conversión exitosa!</p>
+                  <p style={{ fontSize: 13, color: 'var(--txt3)' }}>Tu liquidez ya está generando rendimiento.</p>
                 </div>
-                {order && (
-                  <div className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl p-4 flex flex-col gap-2">
-                    {[
-                      { label: 'Convertido', value: formatMXN(order.amount_mxn), c-gray-900 dark:text-white' },
-                      { label: 'USDC depositados', value: `$${order.amount_usdc.toFixed(2)} USDC`, color: 'text-emerald-600 dark:text-emerald-400' },
-                      { label: 'Rendimiento/día est.', value: `+$${(order.amount_usdc * MOCK_WALLET.current_apy / 100 / 365).toFixed(4)} USD`, color: 'text-emerald-600 dark:text-emerald-400' },
-                    ].map(({ label, value, color }) => (
-                      <div key={label} className="flex justify-between">
-                        <span className="text-gray-400 dark:text-gray-400 text-sm">{label}</span>
-                        <span className={`text-sm font-semibold ${color}`}>{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <button onClick={reset} className="w-full h-11 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-sm font-semibold transition-colors">Volver a tesorería</button>
+                <button onClick={reset} className="btn-neon" style={{ width: '100%', height: 44, border: 'none', borderRadius: 12, fontSize: 14, cursor: 'pointer', marginTop: '0.5rem' }}>
+                  Volver al resumen
+                </button>
               </div>
             )}
 
             {step === 'error' && (
-              <div className="flex flex-col items-center gap-4 py-4">
-                <div className="w-14 h-14 bg-red-50 dark:bg-red-500/10 rounded-2xl flex items-center justify-center">
-                  <AlertTriangle className="w-7 h-7 text-red-500" />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '0.5rem 0' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(204,42,64,0.08)', border: '1px solid rgba(204,42,64,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AlertTriangle size={26} color="var(--red)" />
                 </div>
-                <p className="text-gray-900 dark:text-white font-semibold">{error}</p>
-                <button onClick={reset} className="w-full h-11 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-sm transition-colors">Cerrar</button>
+                <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--txt)' }}>{error}</p>
+                <button onClick={reset} style={{ width: '100%', height: 44, background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 14, color: 'var(--txt2)', cursor: 'pointer' }}>Cerrar</button>
               </div>
             )}
           </div>
         </div>
       )}
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Automatización de tesorería</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Configura tu colchón de seguridad y convierte tu liquidez ociosa en rendimiento.</p>
+      <main style={{ maxWidth: 960, margin: '0 auto', padding: '2rem 1rem' }}>
+        <div style={{ marginBottom: '2rem' }} className="animate-fade-up">
+          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 26, color: 'var(--txt)', letterSpacing: '-0.025em', marginBottom: '0.3rem' }}>Automatización de tesorería</h1>
+          <p style={{ fontSize: 14, color: 'var(--txt3)' }}>Configura tu colchón de seguridad y convierte tu liquidez ociosa en rendimiento.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-900 dark:text-white font-medium">Colchón de seguridad</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }} className="treasury-grid animate-fade-up">
+          {/* Buffer config */}
+          <div className="card" style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <Shield size={16} color="var(--txt3)" />
+              <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--txt)' }}>Colchón de seguridad</span>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Define cuánto MXN mantener siempre disponible en tus cuentas.</p>
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Monto del colchón (MXN)</label>
-              <input type="number" value={bufferInput}
-                onChange={e => { setBufferInput(e.target.value); setBuffer(Number(e.target.value)) }}
-                className="w-full h-11 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500" />
-            </div>
-            <div className="grid grid-cols-2 gap-2 mb-4">
+            <p style={{ fontSize: 13, color: 'var(--txt3)', marginBottom: '1.5rem' }}>Define cuánto MXN mantener siempre disponible en tus cuentas.</p>
+
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--txt2)', marginBottom: '0.4rem' }}>Monto del colchón (MXN)</label>
+            <input type="number" value={bufferInput}
+              onChange={e => { setBufferInput(e.target.value); setBuffer(Number(e.target.value)) }}
+              style={{
+                width: '100%', height: 44, padding: '0 0.875rem', marginBottom: '1rem',
+                background: 'var(--bg3)', border: '1px solid var(--border)',
+                borderRadius: 10, fontSize: 14, color: 'var(--txt)', outline: 'none',
+              }}
+              onFocus={e => e.target.style.borderColor = 'var(--neon-border)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border)'}
+            />
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1.25rem' }}>
               {[50000, 100000, 200000, 500000].map(v => (
                 <button key={v} onClick={() => { setBuffer(v); setBufferInput(String(v)) }}
-                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${buffer === v
-                    ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30'
-                    : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:text-gray-900 dark:hover:text-white'}`}>
+                  style={{
+                    padding: '0.5rem 0.75rem', borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                    background: buffer === v ? 'var(--neon-muted)' : 'var(--bg3)',
+                    border: `1px solid ${buffer === v ? 'var(--neon-border)' : 'var(--border)'}`,
+                    color: buffer === v ? 'var(--neon)' : 'var(--txt2)',
+                    transition: 'all 0.15s',
+                  }}>
                   {formatMXN(v)}
                 </button>
               ))}
             </div>
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 flex flex-col gap-2">
+
+            <div style={{ background: 'var(--bg3)', borderRadius: 12, padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               {[
-                { label: 'Total en cuentas', value: formatMXN(totalMXN), color: 'text-gray-900 dark:text-white' },
-                { label: 'Colchón reservado', value: `- ${formatMXN(buffer)}`, color: 'text-blue-600 dark:text-blue-400' },
-                { label: 'Liquidez ociosa', value: formatMXN(idleMXN), color: idleMXN > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400 dark:text-gray-500', divider: true },
+                { label: 'Total en cuentas',  value: formatMXN(totalMXN),    color: 'var(--txt)' },
+                { label: 'Colchón reservado', value: `- ${formatMXN(buffer)}`, color: 'var(--blue)' },
+                { label: 'Liquidez ociosa',   value: formatMXN(idleMXN),     color: idleMXN > 0 ? 'var(--amber)' : 'var(--txt3)', divider: true },
               ].map(({ label, value, color, divider }) => (
                 <div key={label}>
-                  {divider && <div className="h-px bg-gray-200 dark:bg-gray-700 my-1" />}
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 dark:text-gray-400 text-xs">{label}</span>
-                    <span className={`text-xs font-semibold ${color}`}>{value}</span>
+                  {divider && <div style={{ height: 1, background: 'var(--border)', margin: '0.25rem 0' }} />}
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 12, color: 'var(--txt3)' }}>{label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color }}>{value}</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-900 dark:text-white font-medium">Proyección de rendimiento</span>
+          {/* Projection + CTA */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                <TrendingUp size={16} color="var(--txt3)" />
+                <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--txt)' }}>Proyección de rendimiento</span>
               </div>
-              <div className="flex flex-col gap-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {[
-                  { label: 'Liquidez a convertir', value: formatMXN(idleMXN), color: 'text-gray-900 dark:text-white' },
-                  { label: 'USDC estimado', value: `$${iFixed(2)} USDC`, color: 'text-gray-900 dark:text-white' },
-                  { label: 'APY actual', value: `${MOCK_WALLET.current_apy}%`, color: 'text-emerald-600 dark:text-emerald-400' },
-                  { label: 'Rendimiento diario est.', value: `+$${estimatedDailyUSD.toFixed(4)} USD`, color: 'text-emerald-600 dark:text-emerald-400' },
-                  { label: 'Rendimiento anual est.', value: `+$${estimatedYearlyUSD.toFixed(2)} USD`, color: 'text-emerald-600 dark:text-emerald-400' },
+                  { label: 'Liquidez a convertir',   value: formatMXN(idleMXN),                              color: 'var(--txt)' },
+                  { label: 'USDC estimado',           value: `$${idleUSDC.toFixed(2)} USDC`,                  color: 'var(--txt)' },
+                  { label: 'APY actual',              value: `${MOCK_WALLET.current_apy}%`,                   color: 'var(--neon)' },
+                  { label: 'Rendimiento diario est.', value: `+$${estimatedDailyUSD.toFixed(4)} USD`,         color: 'var(--neon)' },
+                  { label: 'Rendimiento anual est.',  value: `+$${estimatedYearlyUSD.toFixed(2)} USD`,        color: 'var(--neon)' },
                 ].map(({ label, value, color }) => (
-                  <div key={label} className="flex justify-between">
-                    <span className="text-gray-400 dark:text-gray-400 text-sm">{label}</span>
-                    <span className={`text-sm font-medium ${color}`}>{value}</span>
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 13, color: 'var(--txt3)' }}>{label}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color }}>{value}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <button onClick={() => setStep('confirming')} disabled={idleMXN < 100}
-              className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors">
-              {idleMXN < 100 ? 'Sin liquidez ociosa para convertir' : <>Convertir {formatMXN(idleMXN)} ahora <ArrowRight className="w-4 h-4" /></>}
+            <button onClick={() => setStep('confirming')} disabled={idleMXN < 100} className="btn-neon"
+              style={{ width: '100%', height: 52, border: 'none', borderRadius: 14, fontSize: 15, cursor: idleMXN < 100 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              {idleMXN < 100
+                ? 'Sin liquidez ociosa para convertir'
+                : <><span>Convertir {formatMXN(idleMXN)} ahora</span><ArrowRight size={16} /></>
+              }
             </button>
 
-            <div className="bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4">
-              <p className="text-gray-400 dark:text-gray-400 text-xs text-center">
+            <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '0.875rem 1rem' }}>
+              <p style={{ fontSize: 12, color: 'var(--txt3)', textAlign: 'center' }}>
                 🔒 Tu capital permanece bajo tu control en todo momento. La conversión se puede revertir cuando lo necesites.
               </p>
             </div>
           </div>
         </div>
       </main>
+
+      <style>{`
+        @media (min-width: 768px) {
+          .treasury-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+      `}</style>
     </div>
   )
 }

@@ -48,69 +48,120 @@ export default function AccountsPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-500 dark:text-gray-400 text-sm">Sincronizando cuentas...</p>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', border: '2px solid var(--neon)', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
+        <p style={{ fontSize: 14, color: 'var(--txt2)' }}>Sincronizando cuentas...</p>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Nav onSync={loadData} />
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Cuentas bancarias</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Sincronizadas en tiempo real via Open Banking</p>
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1rem' }}>
+        {/* Header */}
+        <div style={{ marginBottom: '1.75rem' }} className="animate-fade-up">
+          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 26, color: 'var(--txt)', letterSpacing: '-0.025em', marginBottom: '0.3rem' }}>
+            Cuentas bancarias
+          </h1>
+          <p style={{ fontSize: 14, color: 'var(--txt3)' }}>Sincronizadas en tiempo real via Open Banking</p>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 flex flex-col gap-4">
-            {accounts.map(acc => (
-              <div key={acc.id} onClick={() => handleSelectAccount(acc.id)}
-                className={`bg-white dark:bg-gray-900 border rounded-2xl p-5 cursor-pointer transition-all ${selectedAccount === acc.id ? 'border-emerald-500/50' : 'border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700'}`}>
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center">
-                      <span className="text-sm font-bold text-gray-600 dark:text-gray-300">{acc.institution.name.slice(0, 2)}</span>
-                    </div>
-                    <div>
-                      <p className="text-gray-900 dark:text-white font-medium">{acc.institution.name}</p>
-                      <p className="text-gray-400 dark:text-gray-500 text-xs">{acc.name} · {acc.number}</p>
-                    </div>
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${acc.status === 'VALID' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'}`}>
-                    {acc.status === 'VALID' ? 'Activa' : 'Error'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  {[['Saldo actual', acc.balance.current], ['Disponible', acc.balance.available]].map(([label, val]) => (
-                    <div key={label as string}>
-                      <p className="text-gray-400 dark:text-gray-500 text-xs mb-1">{label}</p>
-                      <p className="text-gray-900 dark:text-white text-xl font-bold">{formatMXN(val as number)}</p>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-gray-400 dark:text-gray-600 text-xs mt-3">Última sync: {new Date(acc.last_accessed_at).toLocaleTimeString('es-MX')}</p>
-              </div>
-            ))}
 
+        {/* Layout Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }} className="accounts-grid">
+          
+          {/* Column: Accounts & Transactions */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            
+            {/* Bank Cards List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {accounts.map(acc => (
+                <div 
+                  key={acc.id} 
+                  onClick={() => handleSelectAccount(acc.id)} 
+                  className="card"
+                  style={{
+                    padding: '1.5rem', 
+                    cursor: 'pointer',
+                    background: 'var(--bg2)',
+                    borderRadius: '16px',
+                    border: '1px solid',
+                    borderColor: selectedAccount === acc.id ? 'var(--neon)' : 'var(--border)',
+                    boxShadow: selectedAccount === acc.id ? '0 0 20px rgba(0, 255, 136, 0.15)' : 'none',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ 
+                        width: 44, height: 44, borderRadius: 12, 
+                        background: 'var(--bg3)', border: '1px solid var(--border)', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                      }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--neon)' }}>{acc.institution.name.slice(0, 2)}</span>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--txt)' }}>{acc.institution.name}</p>
+                        <p style={{ fontSize: 13, color: 'var(--txt3)' }}>{acc.name} · {acc.number}</p>
+                      </div>
+                    </div>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20,
+                      background: acc.status === 'VALID' ? 'var(--neon-muted)' : 'rgba(204,42,64,0.08)',
+                      color: acc.status === 'VALID' ? 'var(--neon)' : 'var(--red)',
+                      border: `1px solid ${acc.status === 'VALID' ? 'var(--neon-border)' : 'rgba(204,42,64,0.2)'}`,
+                      textTransform: 'uppercase', letterSpacing: '0.05em'
+                    }}>
+                      {acc.status === 'VALID' ? 'Activa' : 'Error'}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', paddingLeft: '0.25rem' }}>
+                    {[['Saldo actual', acc.balance.current], ['Disponible', acc.balance.available]].map(([label, val]) => (
+                      <div key={label as string}>
+                        <p style={{ fontSize: 12, color: 'var(--txt3)', marginBottom: '0.4rem', fontWeight: 500 }}>{label}</p>
+                        <p style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.02em' }}>
+                          {formatMXN(val as number)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <p style={{ fontSize: 11, color: 'var(--txt3)', marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+                    Última sincronización: {new Date(acc.last_accessed_at).toLocaleTimeString('es-MX')}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Transactions List */}
             {transactions.length > 0 && (
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-gray-100 dark:border-gray-800">
-                  <p className="text-gray-900 dark:text-white font-medium text-sm">Movimientos recientes</p>
-                  <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5">{accounts.find(a => a.id === selectedAccount)?.institution.name}</p>
+              <div className="card" style={{ overflow: 'hidden' }}>
+                <div style={{ padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--border)' }}>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--txt)' }}>Movimientos recientes</p>
+                  <p style={{ fontSize: 12, color: 'var(--txt3)', marginTop: '0.15rem' }}>
+                    {accounts.find(a => a.id === selectedAccount)?.institution.name}
+                  </p>
                 </div>
                 {transactions.map((tx, i) => (
-                  <div key={tx.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < transactions.length - 1 ? 'border-b border-gray-100 dark:border-gray-800' : ''}`}>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${tx.type === 'INFLOW' ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-red-50 dark:bg-red-500/10'}`}>
-                      {tx.type === 'INFLOW' ? <ArrowDownRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <ArrowUpRight className="w-4 h-4 text-red-600 dark:text-red-400" />}
+                  <div key={tx.id} style={{
+                    padding: '0.875rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    borderBottom: i < transactions.length - 1 ? '1px solid var(--border)' : 'none',
+                  }}>
+                    <div style={{
+                      width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                      background: tx.type === 'INFLOW' ? 'var(--neon-muted)' : 'rgba(204,42,64,0.07)',
+                      border: `1px solid ${tx.type === 'INFLOW' ? 'var(--neon-border)' : 'rgba(204,42,64,0.18)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {tx.type === 'INFLOW' ? <ArrowDownRight size={15} color="var(--neon)" /> : <ArrowUpRight size={15} color="var(--red)" />}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-gray-900 dark:text-white text-sm truncate">{tx.description}</p>
-                      <p className="text-gray-400 dark:text-gray-500 text-xs">{new Date(tx.value_date).toLocaleDateString('es-MX')} · Ref: {tx.reference.slice(-6)}</p>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <p style={{ fontSize: 13, color: 'var(--txt)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.description}</p>
+                      <p style={{ fontSize: 11, color: 'var(--txt3)' }}>{new Date(tx.value_date).toLocaleDateString('es-MX')} · Ref: {tx.reference.slice(-6)}</p>
                     </div>
-                    <p className={`text-sm font-semibold flex-shrink-0 ${tx.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <p style={{ fontSize: 13, fontWeight: 700, flexShrink: 0, color: tx.amount > 0 ? 'var(--neon)' : 'var(--red)' }}>
                       {tx.amount > 0 ? '+' : ''}{formatMXN(tx.amount)}
                     </p>
                   </div>
@@ -119,42 +170,70 @@ export default function AccountsPage() {
             )}
           </div>
 
-          <div className="flex flex-col gap-4">
+          {/* Sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} className="accounts-sidebar">
             {virtualAccount && (
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-                <p className="text-gray-900 dark:text-white font-medium text-sm mb-1">CLABE para recibir fondos</p>
-                <p className="text-gray-400 dark:text-gray-400 text-xs mb-4">Envía un SPEI a esta CLABE para depositar en Fluxo</p>
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-3">
-                  <p className="text-gray-400 dark:text-gray-400 text-xs mb-1">CLABE interbancaria</p>
-                  <p className="text-gray-900 dark:text-white font-mono text-sm tracking-wider">{virtualAccount.clabe}</p>
+              <div className="card" style={{ padding: '1.25rem' }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--txt)', marginBottom: '0.25rem' }}>CLABE para recibir fondos</p>
+                <p style={{ fontSize: 12, color: 'var(--txt3)', marginBottom: '1rem' }}>Envía un SPEI a esta CLABE para depositar en Fluxo</p>
+                <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 12, padding: '0.875rem 1rem', marginBottom: '0.75rem' }}>
+                  <p style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: '0.3rem' }}>CLABE interbancaria</p>
+                  <p style={{ fontFamily: 'monospace', fontSize: 14, letterSpacing: '0.08em', color: 'var(--txt)', fontWeight: 600 }}>{virtualAccount.clabe}</p>
                 </div>
-                <button onClick={copyClabe} className="w-full h-10 flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-emerald-500/50 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-xl text-sm transition-all">
-                  {copied ? <><CheckCircle2 className="w-4 h-4 text-emerald-500" /><span className="text-emerald-500">¡Copiada!</span></> : <><Copy className="w-4 h-4" />Copiar CLABE</>}
+                <button onClick={copyClabe} style={{
+                  width: '100%', height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                  background: copied ? 'var(--neon-muted)' : 'var(--bg3)',
+                  border: `1px solid ${copied ? 'var(--neon-border)' : 'var(--border)'}`,
+                  borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                  color: copied ? 'var(--neon)' : 'var(--txt2)',
+                  transition: 'all 0.18s',
+                }}>
+                  {copied ? <><CheckCircle2 size={14} />¡Copiada!</> : <><Copy size={14} />Copiar CLABE</>}
                 </button>
-                <p className="text-gray-400 dark:text-gray-600 text-xs text-center mt-3">Alias: {virtualAccount.alias}</p>
+                <p style={{ fontSize: 11, color: 'var(--txt3)', textAlign: 'center', marginTop: '0.75rem' }}>Alias: {virtualAccount.alias}</p>
               </div>
             )}
-
-            {ticker && (
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-                <p className="text-gray-900 dark:text-white font-medium text-sm mb-4">Tipo de cambio</p>
-                <div className="text-center py-2">
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">${ticker.last.toFixed(4)}</p>
-                  <p className="text-gray-400 dark:text-gray-400 text-sm mt-1">MXN por USDC</p>
-                </div>
-                <div className="flex justify-between mt-4">
-                  {[['Compra', ticker.bid.toFixed(4)], ['Venta', ticker.ask.toFixed(4)], ['Volumen', `${(ticker.volume / 1000).toFixed(0)}K`]].map(([label, val]) => (
-                    <div key={label} className="text-center">
-                      <p className="text-gray-400 dark:text-gray-500 text-xs">{label}</p>
-                      <p className="text-gray-900 dark:text-white text-sm font-medium">${val}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+{ticker && (
+  <div 
+    className="card" 
+    style={{ 
+      padding: '1.5rem',
+      background: 'var(--bg2)', /* Fondo de tarjeta */
+      border: '1px solid var(--border)', /* Línea de contorno sutil */
+      borderRadius: '16px', /* Esquinas redondeadas modernas */
+      display: 'flex',
+      flexDirection: 'column',
+      transition: 'all 0.2s ease'
+    }}
+  >
+    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--txt)', marginBottom: '1rem' }}>Tipo de cambio</p>
+    
+    <div style={{ textAlign: 'center', padding: '0.75rem 0' }}>
+      <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 32, color: 'var(--txt)', letterSpacing: '-0.02em' }}>
+        ${ticker.last.toFixed(4)}
+      </p>
+      <p style={{ fontSize: 13, color: 'var(--txt3)', marginTop: '0.25rem' }}>MXN por USDC</p>
+    </div>
+    
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+      {[['Compra', ticker.bid.toFixed(4)], ['Venta', ticker.ask.toFixed(4)], ['Volumen', `${(ticker.volume / 1000).toFixed(0)}K`]].map(([label, val]) => (
+        <div key={label} style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: '0.3rem', fontWeight: 500 }}>{label}</p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt)' }}>${val}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
           </div>
         </div>
       </main>
+
+      <style>{`
+        @media (min-width: 1024px) {
+          .accounts-grid { grid-template-columns: 1fr 300px !important; }
+        }
+      `}</style>
     </div>
   )
 }

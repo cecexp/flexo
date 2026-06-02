@@ -2,51 +2,135 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Fluxo Design System ──────────────────────────────── */
+
 :root {
-  /* Modo CLARO */
+  /* Brand */
   --neon: #00FF88;
   --neon-dim: #00CC6A;
-  --neon-muted: rgba(0,255,136,0.10);
-  --neon-border: rgba(0,255,136,0.25);
+  --neon-glow: rgba(0, 255, 136, 0.15);
+  --neon-border: rgba(0, 255, 136, 0.30);
+  --neon-muted: rgba(0, 255, 136, 0.08);
 
-  --bg: #FFFFFF;
-  --bg2: #F7F9FB;
-  --bg3: #EEF2F6;
-  --bg4: #E4EAF0;
+  /* Surfaces — Light */
+  --bg:    #F0F4F8;
+  --bg2:   #FFFFFF;
+  --bg3:   #E8EEF5;
+  --bg4:   #D8E2ED;
 
-  --txt: #0A0F14;
-  --txt2: #4A5A6A;
-  --txt3: #8A9BB0;
+  /* Text — Light */
+  --txt:   #08111A;
+  --txt2:  #3D5166;
+  --txt3:  #7A90A8;
 
-  --border: rgba(0,0,0,0.07);
-  --border2: rgba(0,0,0,0.12);
+  /* Borders — Light */
+  --border:  rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
 
-  --amber: #B86A00;
-  --amber-bg: rgba(255,179,71,0.10);
-  --amber-border: rgba(255,179,71,0.25);
+  /* Semantic */
+  --amber:        #B86A00;
+  --amber-bg:     rgba(255,179,71,0.10);
+  --amber-border: rgba(255,179,71,0.30);
+  --red:          #CC2A40;
+  --blue:         #1A6FCC;
 
-  --red: #CC2A40;
-  --blue: #1A6FCC;
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-glow: 0 0 24px rgba(0,255,136,0.18);
 }
 
 html.dark {
-  /* Modo OSCURO */
-  --bg: #080D14;
-  --bg2: #0D1520;
-  --bg3: #111C2A;
-  --bg4: #162030;
+  /* Surfaces — Dark (from brand image: deep navy) */
+  --bg:    #060C14;
+  --bg2:   #0B1520;
+  --bg3:   #101D2C;
+  --bg4:   #162335;
 
-  --txt: #FFFFFF;
-  --txt2: #8A9BB0;
-  --txt3: #4A5A6A;
+  /* Text — Dark */
+  --txt:   #F0F6FF;
+  --txt2:  #7A90A8;
+  --txt3:  #3D5166;
 
-  --border: rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.12);
+  /* Borders — Dark */
+  --border:  rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.11);
 
-  --amber: #FFB347;
-  --amber-bg: rgba(255,179,71,0.08);
+  /* Semantic */
+  --amber:        #FFB347;
+  --amber-bg:     rgba(255,179,71,0.07);
   --amber-border: rgba(255,179,71,0.20);
+  --red:          #FF4D6A;
+  --blue:         #4DA6FF;
 
-  --red: #FF4D6A;
-  --blue: #4DA6FF;
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.30), 0 4px 20px rgba(0,0,0,0.25);
+  --shadow-glow: 0 0 32px rgba(0,255,136,0.20);
 }
+
+/* ── Base ─────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+body {
+  background-color: var(--bg);
+  color: var(--txt);
+  font-feature-settings: "ss01", "cv02";
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.15s ease;
+}
+
+/* ── Scrollbar ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--txt3); }
+
+/* ── Utility classes ──────────────────────────────────── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover { border-color: var(--border2); }
+
+.btn-neon {
+  background: var(--neon);
+  color: #06100A;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  transition: all 0.15s ease;
+}
+.btn-neon:hover {
+  background: var(--neon-dim);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px);
+}
+.btn-neon:active { transform: translateY(0); }
+.btn-neon:disabled { opacity: 0.45; transform: none; box-shadow: none; cursor: not-allowed; }
+
+.badge-neon {
+  background: var(--neon-muted);
+  color: var(--neon);
+  border: 1px solid var(--neon-border);
+}
+
+.neon-text { color: var(--neon); }
+
+/* ── Animations ───────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes pulse-neon {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,136,0); }
+  50%       { box-shadow: 0 0 0 6px rgba(0,255,136,0.12); }
+}
+
+.animate-fade-up { animation: fade-up 0.4s ease both; }
+.animate-fade-in { animation: fade-in 0.3s ease both; }
+.animate-pulse-neon { animation: pulse-neon 2.5s ease-in-out infinite; }

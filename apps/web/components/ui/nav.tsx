@@ -6,10 +6,10 @@ import { clearMockSession } from '@/lib/mock/privy'
 import ThemeToggle from './theme-toggle'
 import { useState } from 'react'
 
-const LINKS = [
+const NAV_ITEMS = [
   { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Cuentas', path: '/accounts' },
-  { label: 'Tesorería', path: '/treasury' },
+  { label: 'Cuentas',   path: '/accounts'  },
+  { label: 'Tesorería', path: '/treasury'  },
 ]
 
 export default function Nav({ onSync }: { onSync?: () => void }) {
@@ -18,45 +18,69 @@ export default function Nav({ onSync }: { onSync?: () => void }) {
   const [syncing, setSyncing] = useState(false)
 
   async function handleSync() {
+    if (!onSync) return
     setSyncing(true)
-    await onSync?.()
-    await new Promise(r => setTimeout(r, 1200))
+    await onSync()
     setSyncing(false)
   }
 
   return (
-    <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 sticky top-0 z-10">
-      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/dashboard')}>
-            <div className="w-6 h-6 bg-emerald-500 rounded-md flex items-center justify-center">
-              <Zap className="w-3 h-3 text-white" />
+    <header style={{
+      background: 'var(--bg)',
+      borderBottom: '1px solid var(--border)',
+      position: 'sticky', top: 0, zIndex: 50,
+      backdropFilter: 'blur(12px)',
+    }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 1rem', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Logo + Nav */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <button onClick={() => router.push('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--neon)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap size={14} color="#06100A" />
             </div>
-            <span className="text-gray-900 dark:text-white font-semibold text-sm">Fluxo</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-1">
-            {LINKS.map(({ label, path }) => (
-              <button key={path} onClick={() => router.push(path)}
-                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${pathname === path
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-medium'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
-                {label}
-              </button>
-            ))}
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 16, color: 'var(--txt)', letterSpacing: '-0.02em' }}>Fluxo</span>
+          </button>
+          <nav style={{ display: 'flex', gap: '0.25rem' }}>
+            {NAV_ITEMS.map(({ label, path }) => {
+              const active = pathname === path
+              return (
+                <button key={path} onClick={() => router.push(path)} style={{
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: 8,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: active ? 600 : 400,
+                  background: active ? 'var(--bg3)' : 'transparent',
+                  color: active ? 'var(--txt)' : 'var(--txt3)',
+                  transition: 'all 0.15s ease',
+                }}>
+                  {label}
+                </button>
+              )
+            })}
           </nav>
         </div>
-        <div className="flex items-center gap-1">
+        {/* Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <ThemeToggle />
           {onSync && (
-            <button onClick={handleSync} className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Sync</span>
+            <button onClick={handleSync} style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: 'var(--bg3)', border: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: 'var(--txt2)',
+            }}>
+              <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
             </button>
           )}
-          <div className="w-px h-4 bg-gray-200 dark:bg-gray-800 mx-1" />
-          <button onClick={() => { clearMockSession(); router.push('/login') }}
-            className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-            <LogOut className="w-3.5 h-3.5" />
+          <button onClick={() => { clearMockSession(); router.push('/login') }} style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: 'var(--bg3)', border: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: 'var(--txt3)',
+          }}>
+            <LogOut size={14} />
           </button>
         </div>
       </div>
