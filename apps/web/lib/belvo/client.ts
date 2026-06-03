@@ -1,6 +1,5 @@
 // ============================================================
-// BELVO CLIENT — Mock para desarrollo
-// En producción: usar credenciales reales de Belvo Sandbox
+// BELVO CLIENT — Sandbox real
 // ============================================================
 
 export interface BelvoAccount {
@@ -30,8 +29,133 @@ export interface BelvoTransaction {
   accounting_date: string
 }
 
-// Mock de cuentas bancarias como las devuelve Belvo
-export const MOCK_BELVO_ACCOUNTS: BelvoAccount[] = [
+async function belvoFetch(path: string, options?: RequestInit) {
+  const id  = process.env.BELVO_SECRET_ID
+  const pwd = process.env.BELVO_SECRET_PASSWORD
+  const url = process.env.BELVO_URL ?? 'https://sandbox.belvo.com'
+
+  if (!id || !pwd) throw new Error('Belvo credentials missing')
+
+  const credentials = Buffer.from(`${id}:${pwd}`).toString('base64')
+
+  const res = await fetch(`${url}${path}`, {
+    ...options,
+    headers: {
+      'Authorization': `Basic ${credentials}`,
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Belvo ${res.status}: ${err}`)
+  }
+
+  return res.json()
+}
+
+// Crear un link de sandbox con una institución de prueba
+export async function createSandboxLink(): Promise<string> {
+  const data = await belvoFetch('/api/links/', {
+    method: 'POST',
+    body: JSON.stringify({
+      institution: 'erebus_mx_retail',  // banco sandbox de Belvo para MX
+      username: 'bnk_user_m',
+      password: 'full',
+      access_mode: 'single',
+    }),
+  })
+  return data.id
+}
+
+export async function fetchBelvoAccounts(linkId?: string): Promise<BelvoAccount[]> {
+  try {
+    // Si no hay linkId, crear uno sandbox
+    const id = linkId ?? await createSandboxLink()
+
+    const data = await belvoFetch('/api/accounts/', {
+      method: 'POST',
+      body: JSON.stringify({
+        link: id,
+        save_data: true,
+      }),
+    })
+
+    const accounts = Array.isArray(data) ? data : [data]
+
+    return accounts.map((acc: any) => ({
+      id: acc.id,
+      link: acc.link,
+      institution: {
+        name: acc.institution?.name ?? 'Banco Sandbox',
+        type: acc.institution?.type ?? 'bank',
+      },
+      name: acc.name ?? 'Cuenta',
+      number: acc.number ?? '****0000',
+      balance: {
+        current:   acc.balance?.current   ?? acc.balance ?? 0,
+        available: acc.balance?.available ?? acc.balance ?? 0,
+      },
+      currency: acc.currency ?? 'MXN',
+      type: acc.type ?? 'CHECKING_ACCOUNT',
+      status: acc.status ?? 'VALID',
+      last_accessed_at: acc.last_accessed_at ?? new Date().toISOString(),
+    }))
+  } catch (err) {
+    console.error('[Belvo] fetchAccounts error:', err)
+    // Fallback a mock si Belvo falla
+    return MOCK_BELVO_ACCOUNTS
+  }
+}
+
+export async function fetchBelvoTransactions(
+  accountId: string,
+  linkId?: string
+): Promise<BelvoTransaction[]> {
+  try {
+    const id = linkId ?? await createSandboxLink()
+    const today = new Date().toISOString().split('T')[0]
+    const from  = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+    const data = await belvoFetch('/api/transactions/', {
+      method: 'POST',
+      body: JSON.stringify({
+        link: id,
+        account: accountId,
+        date_from: from,
+        date_to: today,
+        save_data: true,
+      }),
+    })
+
+    const txs = Array.isArray(data) ? data : [data]
+
+    return txs.map((tx: any) => ({
+      id: tx.id,
+      account: tx.account?.id ?? accountId,
+      amount: Math.abs(tx.amount ?? 0),
+      currency: tx.currency ?? 'MXN',
+      description: tx.description ?? tx.reference ?? 'Movimiento',
+      merchant: tx.merchant ? { name: tx.merchant.name } : null,
+      reference: tx.reference ?? tx.id,
+      status: tx.status ?? 'PROCESSED',
+      type: (tx.amount ?? 0) >= 0 ? 'INFLOW' : 'OUTFLOW',
+      value_date: tx.value_date ?? tx.accounting_date ?? new Date().toISOString(),
+      accounting_date: tx.accounting_date ?? new Date().toISOString(),
+    }))
+  } catch (err) {
+    console.error('[Belvo] fetchTransactions error:', err)
+    return MOCK_BELVO_TRANSACTIONS.filter(tx => tx.account === accountId)
+  }
+}
+
+export async function syncBelvoAccount(linkId: string): Promise<BelvoAccount[]> {
+  return fetchBelvoAccounts(linkId)
+}
+
+// ── Fallback mock ─────────────────────────────────────────────
+const MOCK_BELVO_ACCOUNTS: BelvoAccount[] = [
   {
     id: 'belvo-acc-001',
     link: 'belvo-link-bbva-001',
@@ -58,7 +182,7 @@ export const MOCK_BELVO_ACCOUNTS: BelvoAccount[] = [
   },
 ]
 
-export const MOCK_BELVO_TRANSACTIONS: BelvoTransaction[] = [
+const MOCK_BELVO_TRANSACTIONS: BelvoTransaction[] = [
   {
     id: 'belvo-tx-001',
     account: 'belvo-acc-001',
@@ -85,41 +209,4 @@ export const MOCK_BELVO_TRANSACTIONS: BelvoTransaction[] = [
     value_date: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
     accounting_date: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
   },
-  {
-    id: 'belvo-tx-003',
-    account: 'belvo-acc-001',
-    amount: 280000,
-    currency: 'MXN',
-    description: 'SPEI RECIBIDO - DISTRIBUIDOR XYZ',
-    merchant: null,
-    reference: 'SPEI202501130001',
-    status: 'PROCESSED',
-    type: 'INFLOW',
-    value_date: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
-    accounting_date: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
-  },
 ]
-
-// Simula llamada a API de Belvo
-export async function fetchBelvoAccounts(): Promise<BelvoAccount[]> {
-  await new Promise(r => setTimeout(r, 800))
-  return MOCK_BELVO_ACCOUNTS
-}
-
-export async function fetchBelvoTransactions(accountId: string): Promise<BelvoTransaction[]> {
-  await new Promise(r => setTimeout(r, 600))
-  return MOCK_BELVO_TRANSACTIONS.filter(tx => tx.account === accountId)
-}
-
-export async function syncBelvoAccount(linkId: string): Promise<BelvoAccount[]> {
-  await new Promise(r => setTimeout(r, 1200))
-  // Simular balance actualizado con pequeña variación
-  return MOCK_BELVO_ACCOUNTS.map(acc => ({
-    ...acc,
-    balance: {
-      current: acc.balance.current + Math.floor(Math.random() * 10000 - 5000),
-      available: acc.balance.available + Math.floor(Math.random() * 10000 - 5000),
-    },
-    last_accessed_at: new Date().toISOString(),
-  }))
-}

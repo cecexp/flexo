@@ -40,10 +40,10 @@ const REPLACEMENTS = [
   ['text-emerald-500',       'text-neon'],
   ['text-emerald-600',       'text-neon-dim'],
   ['bg-emerald-500',         'bg-neon'],
-  ['dark:bg-emerald-500\\/10', 'bg-neon-muted'],
+  ['dark:bg-emerald-500/10', 'bg-neon-muted'],
   ['bg-emerald-50',          'bg-neon-muted'],
   ['hover:bg-emerald-400',   'hover:bg-neon-dim'],
-  ['dark:border-emerald-500\\/50', 'border-neon'],
+  ['dark:border-emerald-500/50', 'border-neon'],
 
   // Hover y estados
   ['dark:hover:bg-gray-800', 'hover:bg-fluxo-bg3'],
@@ -59,19 +59,33 @@ const REPLACEMENTS = [
 
 ]
 
+// Función auxiliar para escapar caracteres especiales en RegExp dinámicos
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // ─── Recorre archivos recursivamente ─────────────────────────────────────────
 function walk(dir) {
   let files = []
-  for (const f of readdirSync(dir)) {
-    const full = join(dir, f)
-    if (statSync(full).isDirectory()) files = [...files, ...walk(full)]
-    else if (['.tsx', '.ts'].includes(extname(f))) files.push(full)
+  try {
+    for (const f of readdirSync(dir)) {
+      const full = join(dir, f)
+      if (statSync(full).isDirectory()) files = [...files, ...walk(full)]
+      else if (['.tsx', '.ts'].includes(extname(f))) files.push(full)
+    }
+  } catch (e) {
+    console.warn(`⚠️ No se pudo acceder al directorio: ${dir}. Verifica que exista.`);
   }
   return files
 }
 
-// ─── Aplica reemplazos ────────────────────────────────────────────────────────
-const targets = ['app', 'components'].flatMap(walk)
+// ─── Puntos de entrada corregidos para tu estructura real (Sin src/) ──────────
+const targets = [
+    'apps/web/app', 
+    'apps/web/components', 
+    'apps/web/hooks', 
+    'apps/web/stores'
+  ].flatMap(walk)
 let totalFiles = 0, totalChanges = 0
 
 for (const file of targets) {
@@ -79,9 +93,12 @@ for (const file of targets) {
   let changes = 0
 
   for (const [from, to] of REPLACEMENTS) {
-    const regex = new RegExp(from, 'g')
+    const regex = new RegExp(escapeRegExp(from), 'g')
     const next = src.replace(regex, to)
-    if (next !== src) { changes += (src.match(regex) || []).length; src = next }
+    if (next !== src) { 
+      changes += (src.match(regex) || []).length
+      src = next 
+    }
   }
 
   if (changes > 0) {
@@ -91,4 +108,6 @@ for (const file of targets) {
   }
 }
 
-console.log(`\n✅ ${totalFiles} archivos · ${totalChanges} reemplazos totales`)
+console.log(`\n✅ MIGRACIÓN COMPLETA`)
+console.log(`📱 ${totalFiles} archivos actualizados con la identidad de Fluxo`)
+console.log(`✨ ${totalChanges} reemplazos de clases de Tailwind realizados con éxito`)
