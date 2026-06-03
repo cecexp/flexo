@@ -134,3 +134,50 @@ body {
 .animate-fade-up { animation: fade-up 0.4s ease both; }
 .animate-fade-in { animation: fade-in 0.3s ease both; }
 .animate-pulse-neon { animation: pulse-neon 2.5s ease-in-out infinite; }
+
+/* ── Responsive Mobile ────────────────────────────────── */
+
+/* Nav móvil */
+@media (max-width: 640px) {
+  .nav-items { display: none !important; }
+  .nav-mobile { display: flex !important; }
+}
+
+/* Bottom nav móvil */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  z-index: 100;
+  padding: 0 1rem;
+  align-items: center;
+  justify-content: space-around;
+  backdrop-filter: blur(12px);
+}
+
+@media (max-width: 640px) {
+  .bottom-nav { display: flex !important; }
+  main { padding-bottom: 80px !important; }
+}
+
+/* KPI grid móvil: 1 columna */
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 0.5rem !important; }
+  .kpi-grid .card { padding: 0.875rem !important; }
+  .kpi-grid .card p:nth-child(2) { font-size: 16px !important; }
+}
+
+/* Alerta de liquidez móvil */
+@media (max-width: 480px) {
+  .idle-alert { flex-direction: column !important; align-items: flex-start !important; }
+  .idle-alert button { width: 100% !important; }
+}
+
+/* Textos más pequeños en móvil */
+@media (max-width: 640px) {
+  h1 { font-size: 22px !important; }
+  .card { border-radius: 0.75rem !important; }
+}

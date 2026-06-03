@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowDownRight, ArrowUpRight, Copy, CheckCircle2 } from 'lucide-react'
-import { getMockSession } from '@/lib/mock/privy'
 import { fetchBelvoAccounts, fetchBelvoTransactions, type BelvoAccount, type BelvoTransaction } from '@/lib/belvo/client'
 import { getVirtualAccount, getTicker, type BitsoVirtualAccount, type BitsoTicker } from '@/lib/bitso/client'
+import { createClient } from '@/lib/supabase/client'
 import Nav from '@/components/ui/nav'
 
 export default function AccountsPage() {
@@ -19,9 +19,11 @@ export default function AccountsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const session = getMockSession()
-    if (!session) { router.push('/login'); return }
-    loadData()
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) { router.push('/login'); return }
+      loadData()
+    })
   }, [router])
 
   async function loadData() {
@@ -61,7 +63,6 @@ export default function AccountsPage() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Nav onSync={loadData} />
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1rem' }}>
-        {/* Header */}
         <div style={{ marginBottom: '1.75rem' }} className="animate-fade-up">
           <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 26, color: 'var(--txt)', letterSpacing: '-0.025em', marginBottom: '0.3rem' }}>
             Cuentas bancarias
@@ -69,37 +70,20 @@ export default function AccountsPage() {
           <p style={{ fontSize: 14, color: 'var(--txt3)' }}>Sincronizadas en tiempo real via Open Banking</p>
         </div>
 
-        {/* Layout Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }} className="accounts-grid">
-          
-          {/* Column: Accounts & Transactions */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            
-            {/* Bank Cards List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {accounts.map(acc => (
-                <div 
-                  key={acc.id} 
-                  onClick={() => handleSelectAccount(acc.id)} 
-                  className="card"
+                <div key={acc.id} onClick={() => handleSelectAccount(acc.id)} className="card"
                   style={{
-                    padding: '1.5rem', 
-                    cursor: 'pointer',
-                    background: 'var(--bg2)',
-                    borderRadius: '16px',
-                    border: '1px solid',
-                    borderColor: selectedAccount === acc.id ? 'var(--neon)' : 'var(--border)',
+                    padding: '1.5rem', cursor: 'pointer', background: 'var(--bg2)', borderRadius: '16px',
+                    border: '1px solid', borderColor: selectedAccount === acc.id ? 'var(--neon)' : 'var(--border)',
                     boxShadow: selectedAccount === acc.id ? '0 0 20px rgba(0, 255, 136, 0.15)' : 'none',
                     transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
-                >
+                  }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ 
-                        width: 44, height: 44, borderRadius: 12, 
-                        background: 'var(--bg3)', border: '1px solid var(--border)', 
-                        display: 'flex', alignItems: 'center', justifyContent: 'center' 
-                      }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--bg3)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--neon)' }}>{acc.institution.name.slice(0, 2)}</span>
                       </div>
                       <div>
@@ -117,7 +101,6 @@ export default function AccountsPage() {
                       {acc.status === 'VALID' ? 'Activa' : 'Error'}
                     </span>
                   </div>
-                  
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', paddingLeft: '0.25rem' }}>
                     {[['Saldo actual', acc.balance.current], ['Disponible', acc.balance.available]].map(([label, val]) => (
                       <div key={label as string}>
@@ -135,7 +118,6 @@ export default function AccountsPage() {
               ))}
             </div>
 
-            {/* Transactions List */}
             {transactions.length > 0 && (
               <div className="card" style={{ overflow: 'hidden' }}>
                 <div style={{ padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--border)' }}>
@@ -170,7 +152,6 @@ export default function AccountsPage() {
             )}
           </div>
 
-          {/* Sidebar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} className="accounts-sidebar">
             {virtualAccount && (
               <div className="card" style={{ padding: '1.25rem' }}>
@@ -185,50 +166,35 @@ export default function AccountsPage() {
                   background: copied ? 'var(--neon-muted)' : 'var(--bg3)',
                   border: `1px solid ${copied ? 'var(--neon-border)' : 'var(--border)'}`,
                   borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                  color: copied ? 'var(--neon)' : 'var(--txt2)',
-                  transition: 'all 0.18s',
+                  color: copied ? 'var(--neon)' : 'var(--txt2)', transition: 'all 0.18s',
                 }}>
                   {copied ? <><CheckCircle2 size={14} />¡Copiada!</> : <><Copy size={14} />Copiar CLABE</>}
                 </button>
                 <p style={{ fontSize: 11, color: 'var(--txt3)', textAlign: 'center', marginTop: '0.75rem' }}>Alias: {virtualAccount.alias}</p>
               </div>
             )}
-{ticker && (
-  <div 
-    className="card" 
-    style={{ 
-      padding: '1.5rem',
-      background: 'var(--bg2)', /* Fondo de tarjeta */
-      border: '1px solid var(--border)', /* Línea de contorno sutil */
-      borderRadius: '16px', /* Esquinas redondeadas modernas */
-      display: 'flex',
-      flexDirection: 'column',
-      transition: 'all 0.2s ease'
-    }}
-  >
-    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--txt)', marginBottom: '1rem' }}>Tipo de cambio</p>
-    
-    <div style={{ textAlign: 'center', padding: '0.75rem 0' }}>
-      <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 32, color: 'var(--txt)', letterSpacing: '-0.02em' }}>
-        ${ticker.last.toFixed(4)}
-      </p>
-      <p style={{ fontSize: 13, color: 'var(--txt3)', marginTop: '0.25rem' }}>MXN por USDC</p>
-    </div>
-    
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-      {[['Compra', ticker.bid.toFixed(4)], ['Venta', ticker.ask.toFixed(4)], ['Volumen', `${(ticker.volume / 1000).toFixed(0)}K`]].map(([label, val]) => (
-        <div key={label} style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: '0.3rem', fontWeight: 500 }}>{label}</p>
-          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt)' }}>${val}</p>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+            {ticker && (
+              <div className="card" style={{ padding: '1.5rem', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '16px', display: 'flex', flexDirection: 'column' }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--txt)', marginBottom: '1rem' }}>Tipo de cambio</p>
+                <div style={{ textAlign: 'center', padding: '0.75rem 0' }}>
+                  <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 32, color: 'var(--txt)', letterSpacing: '-0.02em' }}>
+                    ${ticker.last.toFixed(4)}
+                  </p>
+                  <p style={{ fontSize: 13, color: 'var(--txt3)', marginTop: '0.25rem' }}>MXN por USDC</p>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                  {[['Compra', ticker.bid.toFixed(4)], ['Venta', ticker.ask.toFixed(4)], ['Volumen', `${(ticker.volume / 1000).toFixed(0)}K`]].map(([label, val]) => (
+                    <div key={label} style={{ textAlign: 'center' }}>
+                      <p style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: '0.3rem', fontWeight: 500 }}>{label}</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt)' }}>${val}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
-
       <style>{`
         @media (min-width: 1024px) {
           .accounts-grid { grid-template-columns: 1fr 300px !important; }

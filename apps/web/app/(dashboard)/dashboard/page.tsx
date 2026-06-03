@@ -6,15 +6,18 @@ import { TrendingUp, Building2, ArrowUpRight, ArrowDownRight, Shield, ChevronRig
 import { getMockSession, clearMockSession } from '@/lib/mock/privy'
 import { MOCK_WALLET, MOCK_BANK_ACCOUNTS, MOCK_TRANSACTIONS } from '@/lib/mock/data'
 import Nav from '@/components/ui/nav'
+import { createClient } from '@/lib/supabase/client'
 
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    const session = getMockSession()
-    if (!session) { router.push('/login'); return }
-    setUser(session)
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) { router.push('/login'); return }
+      setUser(user)
+    })
   }, [router])
 
   if (!user) return null
@@ -68,11 +71,11 @@ export default function DashboardPage() {
 
             {/* Idle alert */}
             {totalIdleMXN > 0 && (
-              <div style={{
-                background: 'var(--amber-bg)', border: '1px solid var(--amber-border)',
-                borderRadius: 14, padding: '1rem 1.25rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem',
-              }}>
+             <div className="idle-alert" style={{
+              background: 'var(--amber-bg)', border: '1px solid var(--amber-border)',
+              borderRadius: 14, padding: '1rem 1.25rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem',
+            }}>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--amber)', marginBottom: '0.2rem' }}>
                     {formatMXN(totalIdleMXN)} sin generar rendimiento
