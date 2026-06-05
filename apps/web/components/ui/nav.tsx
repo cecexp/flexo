@@ -40,20 +40,35 @@ export default function Nav({ onSync }: { onSync?: () => void }) {
         position: 'sticky', top: 0, zIndex: 50,
         backdropFilter: 'blur(12px)',
       }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 1rem', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{
+          maxWidth: 1200, margin: '0 auto',
+          padding: '0 1rem', height: 56,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
 
           {/* Logo + Nav desktop */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <button onClick={() => router.push('/dashboard')}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--neon)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button
+              onClick={() => router.push('/dashboard')}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              <div style={{
+                width: 28, height: 28, borderRadius: 8,
+                background: 'var(--neon)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
                 <Zap size={14} color="#06100A" />
               </div>
-              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 16, color: 'var(--txt)', letterSpacing: '-0.02em' }}>Fluxo</span>
+              <span style={{
+                fontFamily: 'var(--font-display)', fontWeight: 800,
+                fontSize: 16, color: 'var(--txt)', letterSpacing: '-0.02em',
+              }}>
+                Fluxo
+              </span>
             </button>
 
-            {/* Nav solo desktop */}
-            <nav className="nav-items" style={{ display: 'flex', gap: '0.25rem' }}>
+            {/* Nav links — solo visible en desktop */}
+            <nav className="nav-desktop">
               {NAV_ITEMS.map(({ label, path }) => {
                 const active = pathname === path
                 return (
@@ -96,18 +111,26 @@ export default function Nav({ onSync }: { onSync?: () => void }) {
         </div>
       </header>
 
-      {/* ── Bottom nav móvil ── */}
-      <nav className="bottom-nav">
+      {/* ── Bottom nav — solo visible en móvil ── */}
+      <nav className="nav-bottom">
         {NAV_ITEMS.map(({ label, path, icon: Icon }) => {
           const active = pathname === path
           return (
             <button key={path} onClick={() => router.push(path)} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem',
-              background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 0.75rem',
-              borderRadius: 10, flex: 1,
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: '0.5rem 0.75rem', borderRadius: 10, flex: 1,
               color: active ? 'var(--neon)' : 'var(--txt3)',
               transition: 'color 0.15s',
+              position: 'relative',
             }}>
+              {/* Punto activo arriba del ícono */}
+              {active && (
+                <span style={{
+                  position: 'absolute', top: 6, width: 4, height: 4,
+                  borderRadius: '50%', background: 'var(--neon)',
+                }} />
+              )}
               <Icon size={20} />
               <span style={{ fontSize: 10, fontWeight: active ? 600 : 400 }}>{label}</span>
             </button>
@@ -115,10 +138,47 @@ export default function Nav({ onSync }: { onSync?: () => void }) {
         })}
       </nav>
 
+      {/* Spacer para que el contenido no quede tapado por el bottom nav en móvil */}
+      <div className="nav-bottom-spacer" />
+
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Desktop: nav horizontal visible, bottom nav oculto */
+        .nav-desktop {
+          display: flex;
+          gap: 0.25rem;
+        }
+        .nav-bottom {
+          display: none;
+        }
+        .nav-bottom-spacer {
+          display: none;
+        }
+
+        /* Móvil: nav horizontal oculto, bottom nav visible */
         @media (max-width: 640px) {
-          .nav-items { display: none !important; }
+          .nav-desktop {
+            display: none;
+          }
+          .nav-bottom {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            padding: 0.4rem 0.5rem;
+            padding-bottom: calc(0.4rem + env(safe-area-inset-bottom)); /* iPhone notch */
+            gap: 0.25rem;
+            backdrop-filter: blur(12px);
+          }
+          .nav-bottom-spacer {
+            display: block;
+            height: calc(64px + env(safe-area-inset-bottom));
+          }
         }
       `}</style>
     </>
